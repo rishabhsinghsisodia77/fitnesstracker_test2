@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0e1116">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Daily Spend">
+    <title>Daily Spend</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="todayLabel"></p>
+          <h1>Daily Spend</h1>
+        </div>
+        <button class="icon-button" id="themeToggle" type="button" aria-label="Toggle theme" title="Toggle theme">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>
+        </button>
+      </header>
+
+      <main>
+        <section class="summary-grid" aria-label="Spending summary">
+          <article class="summary-card strong">
+            <span>Today</span>
+            <strong id="todayTotal">0</strong>
+          </article>
+          <article class="summary-card">
+            <span>This month</span>
+            <strong id="monthTotal">0</strong>
+          </article>
+          <article class="summary-card">
+            <span>Budget left</span>
+            <strong id="budgetLeft">Set</strong>
+          </article>
+        </section>
+
+        <section class="quick-add" aria-label="Add spending">
+          <form id="expenseForm" autocomplete="off">
+            <input type="hidden" id="editingId">
+            <div class="amount-row">
+              <label for="amount">Amount</label>
+              <input id="amount" name="amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" required>
+            </div>
+
+            <div class="field-grid">
+              <label>
+                <span>Category</span>
+                <select id="category" name="category" required>
+                  <option>Food</option>
+                  <option>Transport</option>
+                  <option>Groceries</option>
+                  <option>Bills</option>
+                  <option>Shopping</option>
+                  <option>Health</option>
+                  <option>Entertainment</option>
+                  <option>Other</option>
+                </select>
+              </label>
+              <label>
+                <span>Date</span>
+                <input id="date" name="date" type="date" required>
+              </label>
+            </div>
+
+            <label>
+              <span>Note</span>
+              <input id="note" name="note" type="text" maxlength="80" placeholder="Tea, cab, medicine">
+            </label>
+
+            <div class="form-actions">
+              <button class="primary" type="submit" id="saveButton">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M7 3v7h8"/><path d="M7 21v-8h10v8"/></svg>
+                Save
+              </button>
+              <button class="ghost hidden" type="button" id="cancelEdit">Cancel</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel" aria-label="Spending charts">
+          <div class="section-head">
+            <h2>Month View</h2>
+            <select id="chartMode" aria-label="Chart view">
+              <option value="daily">Daily</option>
+              <option value="category">Category</option>
+            </select>
+          </div>
+          <canvas id="spendChart" width="720" height="320"></canvas>
+          <div class="legend" id="chartLegend"></div>
+        </section>
+
+        <section class="panel" aria-label="Transactions">
+          <div class="section-head">
+            <h2>Transactions</h2>
+            <button class="icon-button" id="exportButton" type="button" aria-label="Export data" title="Export data">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            </button>
+          </div>
+
+          <div class="filters">
+            <input id="search" type="search" placeholder="Search notes">
+            <select id="filterCategory" aria-label="Filter category">
+              <option value="all">All categories</option>
+            </select>
+          </div>
+
+          <div class="transaction-list" id="transactionList"></div>
+          <p class="empty-state" id="emptyState">No spending saved yet.</p>
+        </section>
+
+        <section class="panel settings" aria-label="Settings">
+          <div class="section-head">
+            <h2>Settings</h2>
+          </div>
+          <div class="settings-grid">
+            <label>
+              <span>Currency</span>
+              <select id="currency">
+                <option value="₹">₹ INR</option>
+                <option value="$">$ USD</option>
+                <option value="€">€ EUR</option>
+                <option value="£">£ GBP</option>
+                <option value="د.إ">د.إ AED</option>
+              </select>
+            </label>
+            <label>
+              <span>Monthly budget</span>
+              <input id="budget" type="number" min="0" step="1" inputmode="numeric" placeholder="Optional">
+            </label>
+          </div>
+          <div class="settings-actions">
+            <label class="file-button">
+              <input id="importFile" type="file" accept="application/json">
+              Import
+            </label>
+            <button class="danger" id="clearData" type="button">Clear data</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="transactionTemplate">
+      <article class="transaction">
+        <div class="category-dot"></div>
+        <div class="transaction-main">
+          <div class="transaction-title"></div>
+          <div class="transaction-meta"></div>
+        </div>
+        <strong class="transaction-amount"></strong>
+        <div class="transaction-actions">
+          <button type="button" class="icon-button edit" aria-label="Edit" title="Edit">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="m16.5 3.5 4 4L7 21H3v-4L16.5 3.5Z"/></svg>
+          </button>
+          <button type="button" class="icon-button delete" aria-label="Delete" title="Delete">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 15H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          </button>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
